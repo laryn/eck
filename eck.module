@@ -26,6 +26,7 @@ function eck_autoload_info() {
     'EntityType' => 'eck.classes.inc',
     'Bundle' => 'eck.classes.inc',
     'ECKCache' => 'eck.classes.inc',
+    'EckInlineEntityFormController' => 'includes/eck.inline_entity_form.inc',
 
     // Views handlers.
     'eck_views_handler_field_link' => 'views/handlers/eck_views_handler_field_link.inc',
