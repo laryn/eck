@@ -21,8 +21,9 @@ administration section.
 
 If you click on an Entity Type's name, you will be taken the the Bundle
 administration page. Here you will see the bundle that was created automatically
-for you, and will be able to add more bundles for your entity type. Entity
-Administration
+for you, and will be able to add more bundles for your entity type.
+
+## Entity Administration
 
 If you click on a bundle of your entity type, you will be taken to the entity
 administration table. There you can add fields to your bundle manage the display
@@ -37,24 +38,23 @@ That is all.
 Install this module using the official Backdrop CMS instructions at
 <https://backdropcms.org/guide/modules>.
 
+## Maintainers
+
+- [Herb v/d Dool](https://github.com/herbdool)
+- [Laryn Kragt Bakker](https://github.com/laryn)
+
+## Credits
+
+ - Ported to Backdrop by [Herb v/d Dool](https://github.com/herbdool) and others.
+ - Drupal version maintained by:
+   - <https://www.drupal.org/u/dieterholvoet>
+   - <https://www.drupal.org/u/robloach>
+   - <https://www.drupal.org/u/amykhailova>
+   - <https://www.drupal.org/u/fmizzell>
+   - <https://www.drupal.org/u/legolasbo>
+   - <https://www.drupal.org/u/arrow>
+
 ## License
 
 This project is GPL v2 software. See the LICENSE.txt file in this directory for
 complete text.
-
-## Maintainers
-
-- ?
-
-## Credits
-
-Ported to Backdrop by [Herb v/d Dool](https://github.com/herbdool) and others.
-
-Backdrop version maintained by:
-
-- <https://www.drupal.org/u/dieterholvoet>
-- <https://www.drupal.org/u/robloach>
-- <https://www.drupal.org/u/amykhailova>
-- <https://www.drupal.org/u/fmizzell>
-- <https://www.drupal.org/u/legolasbo>
-- <https://www.drupal.org/u/arrow>
