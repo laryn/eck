@@ -9,23 +9,30 @@
  * Helper logic for the other ECK tests.
  */
 abstract class EckTestHelper extends BackdropWebTestCase {
+  /**
+   * Create an admin account.
+   */
+  protected function createAdminUser() {
+    $eck_permissions = eck_permission();
+    $permissions = array(
+      // General admin access.
+      'access administration pages',
+    ) + array_keys($eck_permissions);
+
+    // Reset the static variable used to identify permissions, otherwise it's
+    // possible the permissions check in backdropCreateUser will fail.
+    $this->checkPermissions(array(), TRUE);
+    cache_clear_all();
+
+    return $this->backdropCreateUser($permissions);
+  }
 
   /**
-   * Log in as user 1.
+   * Log into the site as an admin user.
    */
-  protected function loginUser1() {
-    // Load user 1 and set a new password for it.
-    $account = user_load(1);
-    $password = user_password();
-    $account->pass_raw = $password;
-
-    // Update the stored password.
-    require_once BACKDROP_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
-    $account->pass = user_hash_password(trim($account->pass_raw));
-    backdrop_write_record('users', $account, 'uid');
-    entity_get_controller('user')->resetCache(array($account->uid));
-
-    $this->drupalLogin($account);
+  protected function loginAdminUser() {
+    $user = $this->createAdminUser();
+    $this->backdropLogin($user);
   }
 
   /**
@@ -59,7 +66,7 @@ abstract class EckTestHelper extends BackdropWebTestCase {
    */
   protected function createEntityType(array $args = array()) {
     // Load the 'add type' form, confirm it is what was expected.
-    $this->drupalGet('admin/structure/entity-type/add');
+    $this->backdropGet('admin/structure/entity-type/add');
     $this->assertResponse(200);
     $this->assertFieldByName('entity_type_label');
     $this->assertFieldByName('entity_type_name');
@@ -83,7 +90,7 @@ abstract class EckTestHelper extends BackdropWebTestCase {
       'default_properties[changed]' => TRUE,
       'default_properties[language]' => TRUE,
     );
-    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->backdropPost(NULL, $edit, t('Save'));
     $this->assertResponse(200);
 
     // Confirm the submission worked.
@@ -107,7 +114,7 @@ abstract class EckTestHelper extends BackdropWebTestCase {
    *   'test_entity'.
    */
   protected function addField($entity_type = 'test_entity', $bundle = 'test_entity') {
-    $this->drupalGet("admin/structure/entity-type/{$entity_type}/{$bundle}/fields");
+    $this->backdropGet("admin/structure/entity-type/{$entity_type}/{$bundle}/fields");
     $this->assertResponse(200);
 
     $edit = array(
@@ -117,16 +124,16 @@ abstract class EckTestHelper extends BackdropWebTestCase {
       'fields[_add_new_field][type]' => 'text_long',
       'fields[_add_new_field][widget_type]' => 'text_textarea',
     );
-    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->backdropPost(NULL, $edit, t('Save'));
     $this->assertResponse(200);
     $this->assertText('has no field settings');
-    $this->drupalPost(NULL, array(), t('Save field settings'));
+    $this->backdropPost(NULL, array(), t('Save field settings'));
     $this->assertResponse(200);
     $this->assertText('Updated field Body field settings.');
     $edit = array(
       'field[translatable]' => TRUE,
     );
-    $this->drupalPost(NULL, $edit, t('Save settings'));
+    $this->backdropPost(NULL, $edit, t('Save settings'));
     $this->assertResponse(200);
     $this->assertText('Saved Body configuration');
   }
@@ -155,7 +162,7 @@ abstract class EckTestHelper extends BackdropWebTestCase {
     $this->verbose(entity_get_info($entity_type));
 
     // Load the entity form.
-    $this->drupalGet("admin/structure/entity-type/{$entity_type}/{$bundle}/add");
+    $this->backdropGet("admin/structure/entity-type/{$entity_type}/{$bundle}/add");
     $this->assertResponse(200);
 
     // Make sure all of the values have fields.
@@ -164,7 +171,7 @@ abstract class EckTestHelper extends BackdropWebTestCase {
     }
 
     // Save the entity.
-    $this->drupalPost(NULL, $args, t('Save'));
+    $this->backdropPost(NULL, $args, t('Save'));
     $this->assertResponse(200);
 
     // Make sure the entity saved correctly.
@@ -231,13 +238,13 @@ abstract class EckTestHelper extends BackdropWebTestCase {
     }
 
     // Enable URL language detection and selection.
-    $this->drupalGet('admin/config/regional/language/configure');
+    $this->backdropGet('admin/config/regional/language/configure');
     $this->assertResponse(200);
     $edit = array(
       'language[enabled][locale-url]' => TRUE,
       'language_content[enabled][locale-url]' => TRUE,
     );
-    $this->drupalPost(NULL, $edit, t('Save settings'));
+    $this->backdropPost(NULL, $edit, t('Save settings'));
     $this->assertResponse(200);
   }
 
@@ -249,14 +256,14 @@ abstract class EckTestHelper extends BackdropWebTestCase {
    */
   protected function addSiteLanguage($langcode) {
     // Load the language-add page.
-    $this->drupalGet('admin/config/regional/language/add');
+    $this->backdropGet('admin/config/regional/language/add');
     $this->assertResponse(200, 'Loaded the language-add admin page.');
 
     // Submit the language-add form.
     $args = array(
       'langcode' => $langcode,
     );
-    $this->drupalPost(NULL, $args, t('Add language'));
+    $this->backdropPost(NULL, $args, t('Add language'));
     $this->assertResponse(200);
 
     // Verify that the browser was returned to the main languages admin page.
@@ -294,12 +301,12 @@ abstract class EckTestHelper extends BackdropWebTestCase {
    * Enable Entity Translation for a given entity type.
    */
   protected function enableEntityTypeTranslation($entity_type) {
-    $this->drupalGet('admin/config/regional/entity_translation');
+    $this->backdropGet('admin/config/regional/entity_translation');
     $this->assertResponse(200);
     $edit = array(
       "entity_translation_entity_types[{$entity_type}]" => $entity_type,
     );
-    $this->drupalPost(NULL, $edit, t('Save configuration'));
+    $this->backdropPost(NULL, $edit, t('Save configuration'));
     $this->assertResponse(200);
     $this->assertText(t('The configuration options have been saved.'));
   }
@@ -311,7 +318,7 @@ abstract class EckTestHelper extends BackdropWebTestCase {
    *   The entity type to add the reference field to; defaults to "test_entity".
    */
   protected function addReferenceFieldToNode($entity_type = 'test_entity') {
-    $this->drupalGet('admin/structure/types/manage/page/fields');
+    $this->backdropGet('admin/structure/types/manage/page/fields');
     $this->assertResponse(200);
 
     $edit = array(
@@ -324,30 +331,30 @@ abstract class EckTestHelper extends BackdropWebTestCase {
     foreach ($edit as $field_name => $value) {
       $this->assertFieldByName($field_name);
     }
-    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->backdropPost(NULL, $edit, t('Save'));
     $this->assertResponse(200);
     $this->assertText('The entity type that can be referenced through this field.');
     $edit = array(
       'field[settings][target_type]' => $entity_type,
     );
-    $this->drupalPost(NULL, $edit, t('Save field settings'));
+    $this->backdropPost(NULL, $edit, t('Save field settings'));
     $this->assertResponse(200);
     $this->assertText('Updated field Reference field settings.');
     $edit = array(
       'field[cardinality]' => -1,
     );
-    $this->drupalPost(NULL, $edit, t('Save settings'));
+    $this->backdropPost(NULL, $edit, t('Save settings'));
     $this->assertResponse(200);
     $this->assertText('Saved Reference configuration.');
 
     // Configure the display settings to output a rendered entity.
-    $this->drupalGet('admin/structure/types/manage/page/display');
+    $this->backdropGet('admin/structure/types/manage/page/display');
     $this->assertResponse(200);
     $this->assertText(t('Here, you can define which fields are shown and hidden when Basic page content is displayed in each view mode, and define how the fields are displayed in each view mode.'));
     $edit = array(
       'fields[field_reference][type]' => 'entityreference_entity_view',
     );
-    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->backdropPost(NULL, $edit, t('Save'));
     $this->assertResponse(200);
     $this->assertText(t('Your settings have been saved.'));
   }
@@ -356,21 +363,21 @@ abstract class EckTestHelper extends BackdropWebTestCase {
    * Enable Entity Translation for a content type.
    */
   protected function enableContentTypeTranslation() {
-    $this->drupalGet('admin/structure/types/manage/page');
+    $this->backdropGet('admin/structure/types/manage/page');
     $this->assertResponse(200);
     $edit = array(
       'language_content_type' => ENTITY_TRANSLATION_ENABLED,
     );
-    $this->drupalPost(NULL, $edit, t('Save content type'));
+    $this->backdropPost(NULL, $edit, t('Save content type'));
     $this->assertResponse(200);
     $this->assertText(strip_tags(t('The content type %name has been updated.', array('%name' => 'Basic page'))));
 
-    $this->drupalGet('admin/structure/types/manage/page/fields/body');
+    $this->backdropGet('admin/structure/types/manage/page/fields/body');
     $this->assertResponse(200);
     $edit = array(
       'field[translatable]' => TRUE,
     );
-    $this->drupalPost(NULL, $edit, t('Save settings'));
+    $this->backdropPost(NULL, $edit, t('Save settings'));
     $this->assertResponse(200);
     $this->assertText(strip_tags(t('Saved %label configuration.', array('%label' => 'Body'))));
   }

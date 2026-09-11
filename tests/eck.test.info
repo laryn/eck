@@ -1,0 +1,11 @@
+[EckCrudTest]
+name = ECK CRUD test
+description = Test the basic CRUD operations.
+group = Entity Construction Kit
+file = EckCrudTest.test
+
+[EckEntityTranslationTest]
+name = ECK translation test
+description = Test translations on an ECK object, including when it is attached to another entity using EntityReference.
+group = Entity Construction Kit
+file = EckEntityTranslationTest.test

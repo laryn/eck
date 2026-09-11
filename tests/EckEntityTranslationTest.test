@@ -1,9 +1,10 @@
 <?php
-
 /**
  * @file
  * The EckEntityTranslationTest class.
  */
+
+include_once __DIR__ . '/EckTestHelper.test';
 
 /**
  * Test translations on an ECK object.
@@ -11,36 +12,22 @@
  * @todo Do any other scenarios need to be tested?
  */
 class EckEntityTranslationTest extends EckTestHelper {
-
-  /**
-   * Meta data about these tests.
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'ECK translation test',
-      'description' => 'Test translations on an ECK object, including when it is attached to another entity using EntityReference.',
-      'group' => 'eck',
-      'dependencies' => array(
-        'plugin_manager',
-        'entity_plus',
-        'entity_translation',
-        'entityreference',
-      ),
-    );
-  }
-
   /**
    * {@inheritdoc}
    */
   protected function setUp(array $modules = array()) {
-    $modules[] = 'eck';
-    $modules[] = 'entity_translation';
-    $modules[] = 'entityreference';
+    $modules = [
+      'plugin_manager',
+      'entity_plus',
+      'entity_translation',
+      'entityreference',
+      'eck',
+    ];
 
     parent::setUp($modules);
 
     // Log in as user 1.
-    $this->loginUser1();
+    $this->loginAdminUser();
 
     // Create multiple languages.
     $this->setupLocales();
@@ -77,34 +64,34 @@ class EckEntityTranslationTest extends EckTestHelper {
     $entity_id = $this->createEntity($entity_type, $bundle, $args);
 
     // Confirm the translation functionality is available.
-    $this->drupalGet("{$entity_type}/{$bundle}/{$entity_id}");
+    $this->backdropGet("{$entity_type}/{$bundle}/{$entity_id}");
     $this->assertResponse(200);
     $this->assertLink(t('Translate'));
     $this->assertLinkByHref("{$entity_type}/{$bundle}/{$entity_id}/translate");
-    $this->drupalGet("{$entity_type}/{$bundle}/{$entity_id}/translate");
+    $this->backdropGet("{$entity_type}/{$bundle}/{$entity_id}/translate");
     $this->assertResponse(200);
     $this->assertText(strip_tags(t('Translations of %label', array('%label' => $title))));
 
     // Translate the entity into the other languages.
     foreach ($languages as $langcode => $language) {
-      $this->drupalGet("{$langcode}/{$entity_type}/{$bundle}/{$entity_id}/edit/add/en/{$langcode}");
+      $this->backdropGet("{$langcode}/{$entity_type}/{$bundle}/{$entity_id}/edit/add/en/{$langcode}");
       $this->assertResponse(200);
       $args = array(
         "field_body[{$langcode}][0][value]" => $language . ': ' . $field_body,
       );
-      $this->drupalPost(NULL, $args, t('Save'));
+      $this->backdropPost(NULL, $args, t('Save'));
       $this->assertResponse(200);
     }
 
     // Test the entity when it's loaded from each language prefix.
     foreach ($languages as $langcode => $language) {
-      $this->drupalGet("{$langcode}/{$entity_type}/{$bundle}/{$entity_id}");
+      $this->backdropGet("{$langcode}/{$entity_type}/{$bundle}/{$entity_id}");
       $this->assertResponse(200);
       $this->assertText($title);
       $this->assertText($language . ': ' . $field_body);
     }
     // The English version didn't have a URL prefix.
-    $this->drupalGet("{$entity_type}/{$bundle}/{$entity_id}");
+    $this->backdropGet("{$entity_type}/{$bundle}/{$entity_id}");
     $this->assertResponse(200);
     $this->assertText($title);
     $this->assertText('English: ' . $field_body);
@@ -131,38 +118,38 @@ class EckEntityTranslationTest extends EckTestHelper {
         ),
       ),
     );
-    $node = $this->drupalCreateNode($args);
+    $node = $this->backdropCreateNode($args);
     $this->verbose($node);
-    $this->drupalGet('node/' . $node->nid);
+    $this->backdropGet('node/' . $node->nid);
     $this->assertText('English: ' . $body);
     $this->assertText('English: ' . $field_body);
 
     // Open the node edit form to see what it's like.
-    $this->drupalGet('node/' . $node->nid . '/edit');
+    $this->backdropGet('node/' . $node->nid . '/edit');
 
     // Translate the node.
-    $this->drupalGet('node/' . $node->nid . '/translate');
+    $this->backdropGet('node/' . $node->nid . '/translate');
     $this->assertResponse(200);
     foreach ($languages as $langcode => $language) {
-      $this->drupalGet("{$langcode}/node/{$node->nid}/edit/add/en/{$langcode}");
+      $this->backdropGet("{$langcode}/node/{$node->nid}/edit/add/en/{$langcode}");
       $this->assertResponse(200);
       $args = array(
         "body[{$langcode}][0][value]" => $language . ': ' . $body,
       );
-      $this->drupalPost(NULL, $args, t('Save'));
+      $this->backdropPost(NULL, $args, t('Save'));
       $this->assertResponse(200);
     }
 
     // Check each language to make sure both the body field and the ECK body
     // field are present.
     foreach ($languages as $langcode => $language) {
-      $this->drupalGet("{$langcode}/node/{$node->nid}");
+      $this->backdropGet("{$langcode}/node/{$node->nid}");
       $this->assertResponse(200);
       $this->assertText($language . ': ' . $body);
       $this->assertText($language . ': ' . $field_body);
     }
     // The English version didn't have a URL prefix.
-    $this->drupalGet("node/{$node->nid}");
+    $this->backdropGet("node/{$node->nid}");
     $this->assertResponse(200);
     $this->assertText('English: ' . $body);
     $this->assertText('English: ' . $field_body);
