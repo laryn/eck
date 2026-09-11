@@ -280,7 +280,7 @@ class EntityType extends DBObject {
         array(
           'name' => $name,
           'property' => $p[$name],
-          'entity_type' => $this
+          'entity_type' => $this,
         ));
     }
   }
@@ -300,7 +300,7 @@ class EntityType extends DBObject {
         array(
           'name' => $name,
           'property' => $p[$name],
-          'entity_type' => $this
+          'entity_type' => $this,
         ));
 
       unset($p[$name]);
@@ -391,6 +391,11 @@ class EntityType extends DBObject {
       $schema = eck__entity_type__schema($this);
       db_create_table("eck_{$this->name}", $schema);
 
+      // Create the new entity cache table for this entity.
+      $schema = backdrop_get_schema_unprocessed('system', 'cache');
+      $schema['description'] = "Cache table used to store {$this->name} entity records.";
+      db_create_table("cache_entity_{$this->name}", $schema);
+
       // Allow other modules to respond to the creation of entity types.
       module_invoke_all('eck_entity_type_insert', $this);
 
@@ -445,6 +450,9 @@ class EntityType extends DBObject {
     parent::delete();
     db_drop_table('eck_' . $this->name);
 
+    // Delete the entity cache table for this entity.
+    db_drop_table("cache_entity_{$this->name}");
+
     // Allow other modules to respond to the deletion of entity types.
     module_invoke_all('eck_entity_type_delete', $this);
     global $_eck_entity_types_cache;
@@ -466,7 +474,7 @@ class EntityType extends DBObject {
    * @return EntityType|NULL
    */
   public static function loadByName($name) {
-    $entity_types = EntityType::loadAll();
+    $entity_types = self::loadAll();
 
     if (array_key_exists($name, $entity_types)) {
       return $entity_types[$name];
@@ -587,7 +595,7 @@ class Bundle extends DBObject {
       // If this bundle isNew we need to check that it does not exist.
       // @todo we just need to change the field in the db to be unique.
       if ($this->isNew) {
-        $bundle = Bundle::loadByMachineName($this->machine_name);
+        $bundle = self::loadByMachineName($this->machine_name);
         if (!empty($bundle) && !$bundle->isNew) {
           $save = FALSE;
         }
@@ -661,7 +669,7 @@ class Bundle extends DBObject {
    * @return Bundle|Null
    */
   public static function loadByMachineName($machine_name) {
-    $bundles = Bundle::loadAll();
+    $bundles = self::loadAll();
 
     if (array_key_exists($machine_name, $bundles)) {
       return $bundles[$machine_name];
@@ -732,7 +740,7 @@ class Bundle extends DBObject {
 
     if (!isset($entity_bundles[$entity_type_name])) {
       $entity_bundles[$entity_type_name] = array();
-      $bundles = Bundle::loadAll();
+      $bundles = self::loadAll();
 
       foreach ($bundles as $bundle) {
         if ($entity_type_name == $bundle->entity_type) {
@@ -792,7 +800,7 @@ class Bundle extends DBObject {
     if (empty($field['field_name']) || (isset($field_type_fields[$field['field_name']]) && !$options['use existing'])) {
       $iter = count($field_type_fields) + 1;
       $field += array(
-        'field_name' => substr('field_' . $field_type, 0, 28) . '_' . $iter
+        'field_name' => substr('field_' . $field_type, 0, 28) . '_' . $iter,
       );
     }
 

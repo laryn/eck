@@ -14,8 +14,16 @@ function eck_schema() {
 
   $schema = array();
 
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+
   // Schema for an eck only cache table.
-  $schema['cache_eck'] = backdrop_get_schema_unprocessed('system', 'cache');
+  $schema['cache_eck'] = $cache_schema;
+
+  // Also support entitycache.
+  foreach (EntityType::loadAll() as $entity_type) {
+    $schema["cache_entity_{$entity_type->name}"] = $cache_schema;
+    $schema["cache_entity_{$entity_type->name}"]['description'] = "Cache table used to store {$entity_type->name} entity records.";
+  }
 
   // Schema for the eck table.
   $schema['eck_entity_type'] = array(
@@ -65,7 +73,7 @@ function eck_schema() {
       ),
       'machine_name' => array(
         'description' => "A combination of the entity type and the name of"
-          . "this bundle, this combination is unique",
+        . "this bundle, this combination is unique",
         'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
@@ -115,4 +123,22 @@ function eck_schema() {
  */
 function eck_update_last_removed() {
   return 7011;
+}
+
+/**
+ * Ensure Entitycache tables are present during upgrades from Drupal 7.
+ */
+function eck_update_1000() {
+  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+  foreach (EntityType::loadAll() as $entity_type) {
+    if (!db_table_exists("cache_entity_{$entity_type->name}")) {
+      $schema = $cache_schema;
+      $schema['description'] = "Cache table used to store {$entity_type->name} entity records.";
+      db_create_table("cache_entity_{$entity_type->name}", $schema);
+    }
+  }
+  db_delete('system')
+    ->condition('name', 'eck_entitycache')
+    ->condition('type', 'module')
+    ->execute();
 }

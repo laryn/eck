@@ -66,6 +66,13 @@ function eck_flush_caches() {
   EntityType::loadAll(TRUE);
   // Reload all Bundles.
   Bundle::loadAll(TRUE);
+
+  // Clear Entitycache.
+  $bins = array();
+  foreach (EntityType::loadAll() as $entity_type) {
+    $bins[] = "cache_entity_{$entity_type->name}";
+  }
+  return $bins;
 }
 
 /**
@@ -196,7 +203,6 @@ function eck_schema_alter(&$schema) {
     // When something requests an entity's info, the hook_schema is called to
     // get the information about the entity's table, so we need to provide that
     // information in the hook.
-
     // Get all the entity types that have been create
     // (all the rows in eck_entity_type table).
     foreach (EntityType::loadAll() as $entity_type) {
@@ -236,10 +242,10 @@ function eck_eck_entity_label($entity, $entity_id) {
  * Creates a table showing a group of entities.
  *
  * @param array $entities
- *   the entities to create the table from
+ *   the entities to create the table from.
  * @param bool $select
  *   a boolean value that will determine whether the
- *   table is a select table or a regular table
+ *   table is a select table or a regular table.
  */
 function entity_table($entities, $select = FALSE) {
   module_load_include('inc', 'eck', 'eck.entity');
@@ -250,7 +256,7 @@ function entity_table($entities, $select = FALSE) {
   $rows = array();
   $header = array(
     t('Name'),
-    array('data' => t('Operations'), 'colspan' => '1')
+    array('data' => t('Operations'), 'colspan' => '1'),
   );
 
   $info = NULL;
@@ -867,7 +873,6 @@ function eck__entity_access($op, $entity_or_bundle, $account, $entity_type_name)
   }
 
   // @todo should auto-load entity author here.
-
   return eck__multiple_access_check($permissions, FALSE, $account);
 }
 
@@ -890,12 +895,11 @@ function eck_entity_plus_view_alter(&$build, $entity_type) {
       // the paths of any of the possible operations, since contextual links
       // are dependent on the hierarchy of those paths, changing the paths
       // could cause of contextual links not to work correctly.
-
       $build['#contextual_links']['eck']
         = array(
-        "{$entity_type}/{$this_bundle}",
-        array($entity->id())
-      );
+          "{$entity_type}/{$this_bundle}",
+        array($entity->id()),
+        );
     }
   }
 }
@@ -946,7 +950,7 @@ function eck_clean_up_init() {
  * Clean/clear all relevant caches.
  *
  * Actions like creating and entity type or a bundle require modifycations
- * to many parts of drupal, this function takes care of clearing those
+ * to many parts of Backdrop, this function takes care of clearing those
  * caches.
  *
  * This is an expensive operation. Do not call this function unless this
@@ -1013,7 +1017,7 @@ function eck_bundle_copy_info() {
       'import_menu' => array(
         'path' => "admin/structure/entity-type/$k/import",
         'access arguments' => "manage $k properties",
-      )
+      ),
     );
   }
 

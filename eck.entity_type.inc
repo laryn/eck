@@ -378,6 +378,8 @@ function eck__entity_type__info($entity_type) {
       'id' => 'id',
       'bundle' => 'type',
     ),
+    'entity_cache' => TRUE,
+    'field_cache' => FALSE,
     'label callback' => 'eck__entity__label',
     'uri callback' => 'eck__entity__uri',
     // Bundles are defined by the entity types below.
