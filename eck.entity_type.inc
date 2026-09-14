@@ -76,16 +76,41 @@ function eck__entity_type__list() {
 
   $entity_types = EntityType::loadAll();
   usort($entity_types, 'eck_alphabetical_cmp');
+  $ops = [
+    'list' => [
+      'label' => t('Bundle list'),
+      'path' => '',
+    ],
+    'configure' => [
+      'label' => t('Configure'),
+      'path' => 'configure',
+    ],
+    'delete' => [
+      'label' => t('Delete'),
+      'path' => 'delete',
+    ],
+  ];
 
   foreach ($entity_types as $entity_type) {
-    $allowed_operations = '';
-    // Check that the user has permissions to delete:
-    if (eck__multiple_access_check(array(
-      'eck administer entity types',
-      'eck delete entity types',
-    ))) {
-      $allowed_operations = l(t("delete"), "{$path}/{$entity_type->name}/delete");
+    $operations_links = [];
+    foreach ($ops as $op => $op_data) {
+      // Check that the user has permissions to delete:
+      if (eck__multiple_access_check(array(
+        'eck administer entity types',
+        'eck ' . $op . ' entity types',
+      ))) {
+        $operations_links[$op] = [
+          'title' => $op_data['label'],
+          'href' => "{$path}/{$entity_type->name}/{$op_data['path']}",
+        ];
+      }
     }
+    $operations = array(
+      'data' => array(
+        '#type' => 'operations',
+        '#links' => $operations_links,
+      ),
+    );
 
     if (eck__multiple_access_check(array(
       'eck administer bundles',
@@ -99,7 +124,7 @@ function eck__entity_type__list() {
       $label = t("@el", array("@el" => $entity_type->label));
     }
 
-    $rows[] = array($label, $allowed_operations);
+    $rows[] = array($label, $operations);
   }
 
   $build['entity_table'] = array(

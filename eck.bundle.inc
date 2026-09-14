@@ -32,7 +32,7 @@ function eck__bundle__menu($entity_type) {
     'access callback' => FALSE,
     'access arguments' => array(),
   );
-  $menu["$entity_type->name/%/edit"] = array(
+  $menu["$entity_type->name/%/configure"] = array(
     'page callback' => FALSE,
     'page arguments' => array(),
     'access callback' => FALSE,
@@ -47,14 +47,14 @@ function eck__bundle__menu($entity_type) {
     'page callback' => "backdrop_get_form",
     'page arguments' => array(
       "eck__entity_type__delete_form",
-      $entity_type->name
+      $entity_type->name,
     ),
     'access callback' => 'eck__multiple_access_check',
     'access arguments' => array(
       array(
         'eck administer entity types',
-        'eck delete entity types'
-      )
+        'eck delete entity types',
+      ),
     ),
     'file' => 'eck.entity_type.inc',
     'type' => MENU_LOCAL_TASK,
@@ -105,17 +105,17 @@ function eck__bundle__menu($entity_type) {
   );
 
   // EDIT Entity Types.
-  $menu["{$path}/{$entity_type->name}/edit"] = array(
-    'title' => "Edit",
-    'description' => "Edit the '{$entity_type->label}' entity type",
+  $menu["{$path}/{$entity_type->name}/configure"] = array(
+    'title' => "Configure",
+    'description' => "Configure the '{$entity_type->label}' entity type",
     'page callback' => 'backdrop_get_form',
     'page arguments' => array("eck__entity_type__form", $entity_type->name),
     'access callback' => 'eck__multiple_access_check',
     'access arguments' => array(
       array(
         'eck administer entity types',
-        'eck edit entity types'
-      )
+        'eck edit entity types',
+      ),
     ),
     'file' => 'eck.entity_type.inc',
     'type' => MENU_LOCAL_TASK,
@@ -165,19 +165,19 @@ function eck__bundle__list($entity_type) {
   // @todo Do we really need this, can they be here without the right
   // permissions in the first place?
   if (eck__multiple_access_check(array(
-      'eck administer bundles',
-      'eck list bundles',
-      "eck administer {$entity_type->name} bundles",
-      "eck list {$entity_type->name} bundles",
-    )
+    'eck administer bundles',
+    'eck list bundles',
+    "eck administer {$entity_type->name} bundles",
+    "eck list {$entity_type->name} bundles",
+  )
   )) {
 
     $header = array(
       t('Bundle'),
       array(
         'data' => t('Operations'),
-        'colspan' => '1'
-      )
+        'colspan' => '1',
+      ),
     );
 
     $rows = array();
@@ -191,19 +191,44 @@ function eck__bundle__list($entity_type) {
       $admin_info = get_bundle_admin_info($entity_type->name, $bundle->name);
 
       $uri = $admin_info['path'];
+      $ops = [
+        'list' => [
+          'label' => t('Entity list'),
+          'path' => '',
+        ],
+        'configure' => [
+          'label' => t('Configure'),
+          'path' => 'configure',
+        ],
+        'delete' => [
+          'label' => t('Delete'),
+          'path' => 'delete',
+        ],
+      ];
 
-      $allowed_operations = '';
-      // Check that the user has permissions to delete:
-      $perm_check = array(
-        'eck administer bundles',
-        'eck delete bundles',
-        "eck administer {$entity_type->name} bundles",
-        "eck delete {$entity_type->name} bundles",
-      );
+      $operations_links = [];
+      foreach ($ops as $op => $op_data) {
+        // Check that the user has permissions:
+        $perm_check = array(
+          "eck administer bundles",
+          "eck {$op} bundles",
+          "eck administer {$entity_type->name} bundles",
+          "eck {$op} {$entity_type->name} bundles",
+        );
 
-      if (eck__multiple_access_check($perm_check)) {
-        $allowed_operations = l(t('delete'), $uri . "/delete");
+        if (eck__multiple_access_check($perm_check)) {
+          $operations_links[$op] = array(
+            'title' => $op_data['label'],
+            'href' => $uri . "/" . $op_data['path'],
+          );
+        }
       }
+      $operations = array(
+        'data' => array(
+          '#type' => 'operations',
+          '#links' => $operations_links,
+        ),
+      );
 
       // Check that the user can view lists of entities.
       $perm_check = array(
@@ -219,7 +244,7 @@ function eck__bundle__list($entity_type) {
         $label = $bundle_label;
       }
 
-      $rows[] = array($label, $allowed_operations);
+      $rows[] = array($label, $operations);
     }
 
     $build['bundle_table'] = array(
@@ -370,7 +395,7 @@ function eck__bundle__edit_form($form, &$form_state, $entity_type_name, $bundle_
   // Let the behaviors to modify form.
   $vars = eck_property_behavior_invoke_plugin_alter($entity_type, 'bundle_form', array(
     'form' => $form,
-    'form_state' => $form_state
+    'form_state' => $form_state,
   ));
   $form = $vars['form'];
   $form_state = $vars['form_state'];
