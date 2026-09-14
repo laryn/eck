@@ -126,9 +126,28 @@ function eck_update_last_removed() {
 }
 
 /**
- * Ensure Entitycache tables are present during upgrades from Drupal 7.
+ * Adjustments to entity type schema for ECK entities and ensuring entitycache
+ * tables exist.
  */
 function eck_update_1000() {
+  // Get all entity types from `eck_entity_type` table and ensure that the
+  // `entity_type` column exists.
+  if (db_table_exists('eck_entity_type')) {
+    $entity_types = db_query("SELECT name FROM {eck_entity_type}")->fetchAll();
+    foreach ($entity_types as $entity_type) {
+      // If the `entity_type` column does not exist, add it.
+      if (!db_field_exists('eck_' . $entity_type->name, 'entity_type')) {
+        db_add_field('eck_' . $entity_type->name, 'entity_type', array(
+          'description' => "The entity type this bundle belongs to",
+          'default' => $entity_type->name,
+          'type' => 'varchar',
+          'length' => 128,
+          'not null' => TRUE,
+        ));
+      }
+    }
+  }
+  // Ensure that entitycache tables for ECK entities exist.
   $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
   foreach (EntityType::loadAll() as $entity_type) {
     if (!db_table_exists("cache_entity_{$entity_type->name}")) {
@@ -137,6 +156,8 @@ function eck_update_1000() {
       db_create_table("cache_entity_{$entity_type->name}", $schema);
     }
   }
+  // Submodule entry is no longer needed since we've added the functionality
+  // to the main module.
   db_delete('system')
     ->condition('name', 'eck_entitycache')
     ->condition('type', 'module')

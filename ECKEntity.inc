@@ -18,7 +18,14 @@ class ECKEntity extends Entity {
   public $id;
 
   /**
-   * Entity Type
+   * Entity Type.
+   *
+   * @var string
+   */
+  public $entity_type;
+
+  /**
+   * Type / Bundle.
    *
    * @var string
    */
@@ -42,14 +49,14 @@ class ECKEntity extends Entity {
    * Implements EntityInterface::bundle().
    */
   public function bundle() {
-    return isset($this->bundle) ? $this->bundle : $this->entityType();
+    return $this->type ?? $this->entityType();
   }
 
   /**
    * Implements EntityInterface::entityType().
    */
   public function entityType() {
-    return $this->type;
+    return $this->entity_type;
   }
 
   /**

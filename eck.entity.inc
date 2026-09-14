@@ -194,7 +194,7 @@ function eck__entity__list($entity_type_name, $bundle_name) {
 
   $results = $query->execute();
   if (!empty($results)) {
-    $entities = entity_load($entity_type->name, array_keys($results[$entity_type->name]));
+    $entities = entity_load_multiple($entity_type->name, array_keys($results[$entity_type->name]));
   }
   else {
     $entities = array();
@@ -260,7 +260,7 @@ function eck__entity__add($entity_type_name, $bundle_name) {
  * Get the entities view.
  *
  * @param EntityType $entity_type
- *   entity type
+ *   entity type.
  * @param Bundle $bundle
  *   Bundle.
  * @param mixed $id
@@ -269,7 +269,7 @@ function eck__entity__add($entity_type_name, $bundle_name) {
  *   loaded entity but there are some workflows where an object is passed.
  *   So this function handles that case as well.
  * @param string $view_mode
- *   View mode
+ *   View mode.
  */
 function eck__entity__build($entity_type, $bundle, $id, $view_mode = "full") {
 
@@ -515,7 +515,7 @@ function eck__entity__form_submit($form, &$state) {
   $context = array(
     'entity' => $entity,
     'form' => $form,
-    'form_state' => $state
+    'form_state' => $state,
   );
   backdrop_alter('eck_entity_save_message', $msg, $args, $context);
 
