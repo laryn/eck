@@ -1,5 +1,8 @@
+type = module
 name = ECK Example
 description = A module demonstrating the kind of things that ECK can do from code
-package = ECK
-core = 7.x
+package = Entity Construction Kit
+backdrop = 1.x
+hidden = TRUE
+
 dependencies[] = eck

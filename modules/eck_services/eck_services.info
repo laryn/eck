@@ -1,8 +1,9 @@
+type = module
 name = ECK Services
 description = Service resources for ECK
-core = 7.x
-package = ECK
+package = Entity Construction Kit
+backdrop = 1.x
+hidden = TRUE
 
 dependencies[] = eck
 dependencies[] = services
-
