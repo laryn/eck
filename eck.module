@@ -29,6 +29,7 @@ function eck_autoload_info() {
     'Bundle' => 'eck.classes.inc',
     'ECKCache' => 'eck.classes.inc',
     'EckInlineEntityFormController' => 'includes/eck.inline_entity_form.inc',
+    'EntityTranslationECKHandler' => 'includes/eck.entity_translation.inc',
 
     // Views handlers.
     'eck_views_handler_field_link' => 'views/handlers/eck_views_handler_field_link.inc',
