@@ -29,8 +29,8 @@ function eck__entity_type__menu() {
     'access arguments' => array(
       array(
         'eck administer entity types',
-        'eck list entity types'
-      )
+        'eck list entity types',
+      ),
     ),
     'file' => 'eck.entity_type.inc',
   );
@@ -45,8 +45,8 @@ function eck__entity_type__menu() {
     'access arguments' => array(
       array(
         'eck administer entity types',
-        'eck add entity types'
-      )
+        'eck add entity types',
+      ),
     ),
     'type' => MENU_LOCAL_ACTION,
     'weight' => -1,
@@ -70,7 +70,7 @@ function eck__entity_type__list() {
   $path = eck__entity_type__path();
   $header = array(
     t('Entity type'),
-    array('data' => t('Operations'), 'colspan' => '1')
+    array('data' => t('Operations'), 'colspan' => '1'),
   );
   $rows = array();
 
@@ -82,7 +82,7 @@ function eck__entity_type__list() {
     // Check that the user has permissions to delete:
     if (eck__multiple_access_check(array(
       'eck administer entity types',
-      'eck delete entity types'
+      'eck delete entity types',
     ))) {
       $allowed_operations = l(t("delete"), "{$path}/{$entity_type->name}/delete");
     }
@@ -328,6 +328,13 @@ function eck__entity_type__schema($entity_type) {
       'id' => array(
         'description' => "The primary identifier for a(n) {$entity_type->name}.",
         'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'entity_type' => array(
+        'description' => 'The entity type of the entity',
+        'type' => 'varchar',
+        'default' => $entity_type->name,
+        'length' => 255,
         'not null' => TRUE,
       ),
       'type' => array(
