@@ -8,7 +8,7 @@
  * Implements hook_views_data_alter().
  */
 function eck_views_data_alter(&$data) {
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
     $data["eck_{$entity_type->name}"]['view_link'] = array(
       'field' => array(
         'title' => t('Link'),

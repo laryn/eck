@@ -87,8 +87,8 @@ function eck_language_property_widget($property, $vars) {
  * What?.
  */
 function eck_language_bundle_multilingual($entity) {
-  if ($bundle = Bundle::loadByMachineName($entity->entityType() . '_' . $entity->bundle())) {
-    return isset($bundle->config['multilingual']) && $bundle->config['multilingual'];
+  if ($bundle = EckBundle::loadByMachineName($entity->entityType() . '_' . $entity->bundle())) {
+    return isset($bundle->settings['multilingual']) && $bundle->settings['multilingual'];
   }
   return FALSE;
 }
@@ -137,7 +137,7 @@ function eck_language_property_bundle_form($property, $vars) {
     $vars['form']['config_multilingual'] = array(
       '#type' => 'radios',
       '#title' => t('Multilingual support'),
-      '#default_value' => isset($bundle->config["multilingual"]) ? $bundle->config["multilingual"] : 0,
+      '#default_value' => isset($bundle->settings["multilingual"]) ? $bundle->settings["multilingual"] : 0,
       '#options' => array(t('Disabled'), t('Enabled')),
       '#description' => t('Enable multilingual support for this bundle. If enabled, a language selection field will be added to the editing form, allowing you to select from one of the <a href="!languages">enabled languages</a>. If disabled, new posts are saved with the default language. Existing content will not be affected by changing this option.', array('!languages' => url('admin/config/regional/language'))),
     );

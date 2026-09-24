@@ -128,10 +128,10 @@ function eck_property_type_schema($type) {
  */
 function eck__properties__form($form, &$state, $entity_type_name) {
   if (!isset($entity_type_name)) {
-    $entity_type = new EntityType();
+    $entity_type = new EckEntityType();
   }
   else {
-    $entity_type = EntityType::loadByName($entity_type_name);
+    $entity_type = EckEntityType::loadByName($entity_type_name);
   }
 
   $form['entity_type'] = array('#type' => 'value', '#value' => $entity_type);

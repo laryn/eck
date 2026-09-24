@@ -12,7 +12,7 @@ function eck_example_install() {
 
   // To create a new Entity Type simple create an object of the Entity Type
   // class.
-  $entity_type = new EntityType();
+  $entity_type = new EckEntityType();
 
   // An entity type is composed of 3 things: name, lable, and properties. The
   // name is a the machine name (letters, numbers, and underscores only, no
@@ -53,7 +53,7 @@ function eck_example_uninstall() {
   // Deleting and entity type, and all of its content is as easy as creating
   // one. All we have to do is load the entity types that we want to delete, and
   // called the delete method.
-  $entity_type = EntityType::loadByName('eck_employee');
+  $entity_type = EckEntityType::loadByName('eck_employee');
 
   // Even though our entity type was created from code, it is possible that it
   // was deleted from the interface, so we check to make sure we still have

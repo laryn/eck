@@ -57,7 +57,7 @@ function eck__entity_type__menu() {
   // Each entity type can have multiple bundles.
   // Now lets create the menus for the bundle administration of each
   // entity type.
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
     $menu = array_merge($menu, eck__bundle__menu($entity_type));
   }
   return $menu;
@@ -74,7 +74,7 @@ function eck__entity_type__list() {
   );
   $rows = array();
 
-  $entity_types = EntityType::loadAll();
+  $entity_types = EckEntityType::loadAll();
   usort($entity_types, 'eck_alphabetical_cmp');
   $ops = [
     'list' => [
@@ -148,10 +148,10 @@ function eck__entity_type__form($form, &$state, $entity_type_name = NULL) {
   // If this form is being called on a new entity, create a new entity type
   // object, otherwise load the corresponding entity type.
   if (!isset($entity_type_name)) {
-    $entity_type = new EntityType();
+    $entity_type = new EckEntityType();
   }
   else {
-    $entity_type = EntityType::loadByName($entity_type_name);
+    $entity_type = EckEntityType::loadByName($entity_type_name);
   }
 
   $form['entity_type'] = array(
@@ -187,7 +187,7 @@ function eck__entity_type__form($form, &$state, $entity_type_name = NULL) {
     $form['bundle_label'] = array(
       '#type' => 'textfield',
       '#title' => 'Bundle (optional)',
-      '#description' => 'A bundle with the same name as the entity type is created by default, this will override the default',
+      '#description' => 'A bundle with the same name as the entity type is created by default, this will override the default.',
     );
 
     $form['bundle_name'] = array(
@@ -264,7 +264,7 @@ function eck__entity_type__form_submit($form, &$state) {
       }
 
       // Let's set up the object and save it to the db.
-      $bundle = new Bundle();
+      $bundle = new EckBundle();
       $bundle->entity_type = $entity_type->name;
       $bundle->name = $bundle_name;
       $bundle->label = $bundle_label;
@@ -290,9 +290,9 @@ function eck__entity_type__form_submit($form, &$state) {
 /**
  * Delete the entity type.
  *
- * @param EntityType $entity_type
+ * @param EckEntityType $entity_type
  *   Entity type to be deleted, the $entity_type object can be loaded by using
- *   the method EntityType::loadByName($entity_type_name).
+ *   the method EckEntityType::loadByName($entity_type_name).
  *
  * @see eck.classes.inc
  */
@@ -341,7 +341,7 @@ function eck__entity_type__delete_form_submit($form, &$state) {
 /**
  * Create the default schema for an entity type.
  *
- * @param EntityType $entity_type
+ * @param EckEntityType $entity_type
  *   Entity type as returned by eck__entity_type__load().
  *
  *   Passthrough for hook_schema().
@@ -386,7 +386,7 @@ function eck__entity_type__schema($entity_type) {
 /**
  * Generate the entity info for a specific entity.
  *
- * @param EntityType $entity_type
+ * @param EckEntityType $entity_type
  *   As returned by eck__entity_type__load().
  */
 function eck__entity_type__info($entity_type) {
@@ -394,7 +394,7 @@ function eck__entity_type__info($entity_type) {
   $info = array();
   $entity_type_label = $entity_type->label;
 
-  $entity_class = "ECKEntity";
+  $entity_class = "EckEntity";
   $controller_class = "EntityPlusController";
 
   $info[$entity_type->name] = array(
@@ -437,11 +437,11 @@ function eck__entity_type__info($entity_type) {
     'inline entity form' => array('controller' => 'EckInlineEntityFormController'),
     'translation' => array(
       'entity_translation' => array(
-        'class' => 'EntityTranslationECKHandler',
+        'class' => 'EntityTranslationEckHandler',
         // This will be populated based on the bundles.
         'path schemes' => array(
           'default' => array(
-            'base path' => "$entity_type->name/%",
+            'base path' => "{$entity_type->name}/%",
             'path wildcard' => '%',
           ),
         ),
@@ -473,7 +473,7 @@ function eck__entity_type__info($entity_type) {
   }
 
   $eck_path = eck__entity_type__path();
-  foreach (Bundle::loadByEntityType($entity_type) as $bundle) {
+  foreach (EckBundle::loadByEckEntityType($entity_type) as $bundle) {
     $bundle_label = $bundle->label;
     $path = "{$eck_path}/{$entity_type->name}/{$bundle->name}";
 

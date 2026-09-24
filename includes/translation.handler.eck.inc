@@ -10,7 +10,7 @@
  *
  * Overrides default behaviours for ECK properties.
  */
-class EntityTranslationECKHandler extends EntityTranslationDefaultHandler {
+class EntityTranslationEckHandler extends EntityTranslationDefaultHandler {
   /**
    * {@inheritdoc}
    */

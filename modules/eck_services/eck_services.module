@@ -62,7 +62,7 @@ class eckServicesCallbacks {
  */
 function eck_services_services_resources() {
   $resources = array();
-  foreach (EntityType::loadAll() as $entity) {
+  foreach (EckEntityType::loadAll() as $entity) {
     if (variable_get('eck_services_' . $entity->name . '_enable', FALSE)) {
       $resources[$entity->name] = array(
         'operations' => array(

@@ -23,13 +23,13 @@ if (module_exists('references_dialog')) {
  */
 function eck_autoload_info() {
   return array(
-    'ECKEntity' => 'ECKEntity.inc',
+    'EckEntity' => 'EckEntity.inc',
     'DBObject' => 'eck.classes.inc',
-    'EntityType' => 'eck.classes.inc',
-    'Bundle' => 'eck.classes.inc',
-    'ECKCache' => 'eck.classes.inc',
+    'EckEntityType' => 'eck.classes.inc',
+    'EckBundle' => 'eck.classes.inc',
+    'EckCache' => 'eck.classes.inc',
     'EckInlineEntityFormController' => 'includes/eck.inline_entity_form.inc',
-    'EntityTranslationECKHandler' => 'includes/eck.entity_translation.inc',
+    'EntityTranslationEckHandler' => 'includes/eck.entity_translation.inc',
 
     // Views handlers.
     'eck_views_handler_field_link' => 'views/handlers/eck_views_handler_field_link.inc',
@@ -66,13 +66,13 @@ function eck_views_api() {
  */
 function eck_flush_caches() {
   // Reload all ECK entity types.
-  EntityType::loadAll(TRUE);
+  EckEntityType::loadAll(TRUE);
   // Reload all Bundles.
-  Bundle::loadAll(TRUE);
+  EckBundle::loadAll(TRUE);
 
   // Clear Entitycache.
   $bins = array();
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
     $bins[] = "cache_entity_{$entity_type->name}";
   }
   return $bins;
@@ -208,7 +208,7 @@ function eck_schema_alter(&$schema) {
     // information in the hook.
     // Get all the entity types that have been create
     // (all the rows in eck_entity_type table).
-    foreach (EntityType::loadAll() as $entity_type) {
+    foreach (EckEntityType::loadAll() as $entity_type) {
       // The function eck__entity_type__schema returns a schema for that
       // entity type given and entity_type object.
       $schema = array_merge($schema, array("eck_{$entity_type->name}" => eck__entity_type__schema($entity_type)));
@@ -229,7 +229,7 @@ function eck_schema_alter(&$schema) {
 }
 
 /**
- * Implements hook_eck_entity_label()
+ * Implements hook_eck_entity_label().
  */
 function eck_eck_entity_label($entity, $entity_id) {
   $entity_type = entity_type_load($entity->entityType());
@@ -359,7 +359,7 @@ function eck_entity_info() {
 
   // Get all the names of all the entity types from the eck table
   // for each of the created entity types add its info to the $info array.
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
     // eck__entity_info creates the entity_info for each entity type.
     $info = array_merge($info, eck__entity_type__info($entity_type));
   }
@@ -372,7 +372,7 @@ function eck_entity_info() {
  */
 function eck_entity_info_alter(&$info) {
 
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
     $entity_type_info = $info[$entity_type->name];
 
     $entity_type_info = eck_property_behavior_invoke_plugin_alter($entity_type, 'entity_info', $entity_type_info);
@@ -389,10 +389,10 @@ function eck_entity_info_alter(&$info) {
 function eck_field_extra_fields() {
   $extra = array();
 
-  foreach (EntityType::loadAll() as $entity_type) {
-    foreach (Bundle::loadByEntityType($entity_type) as $bundle) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
+    foreach (EckBundle::loadByEckEntityType($entity_type) as $bundle) {
       foreach ($entity_type->properties as $property_name => $property_info) {
-        if (!empty($bundle->config['managed_properties'][$property_name])) {
+        if (!empty($bundle->settings['managed_properties'][$property_name])) {
           $extra[$entity_type->name][$bundle->name]['form'][$property_name] = array(
             'label' => $property_info['label'],
             'description' => t('Entity property'),
@@ -415,14 +415,14 @@ function eck_field_extra_fields() {
  * Entity type load.
  */
 function entity_type_load($entity_type_name) {
-  return EntityType::loadByName($entity_type_name);
+  return EckEntityType::loadByName($entity_type_name);
 }
 
 /**
  * Bundle load.
  */
 function bundle_load($entity_type_name, $bundle_name) {
-  return Bundle::loadByMachineName("{$entity_type_name}_{$bundle_name}");
+  return EckBundle::loadByMachineName("{$entity_type_name}_{$bundle_name}");
 }
 
 /**
@@ -439,7 +439,7 @@ function eck_entity_property_info() {
   module_load_include('inc', 'entity', 'entity.info');
 
   $info = array();
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
 
     $properties = $entity_type->properties;
     $stuff = entity_plus_metadata_convert_schema("eck_{$entity_type->name}");
@@ -478,7 +478,7 @@ function eck_entity_property_info() {
  */
 function eck_entity_property_info_alter(&$info) {
 
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
     $entity_property_info = $info[$entity_type->name];
 
     $entity_property_info = eck_property_behavior_invoke_plugin_alter($entity_type, 'property_info', $entity_property_info);
@@ -533,7 +533,7 @@ function eck_permission() {
       'restrict access' => TRUE,
     ),
     'eck edit entity types' => array(
-      'title' => t('Edit Entity Types'),
+      'title' => t('Configure Entity Types'),
       'restrict access' => TRUE,
     ),
     'eck delete entity types' => array(
@@ -547,7 +547,7 @@ function eck_permission() {
     'eck administer bundles' => array(
       'title' => t('Administer Bundles'),
       'restrict access' => TRUE,
-      'description' => t('Grants the ability to administer(add/configure/delete/list) any ECK Bundle.'),
+      'description' => t('Grants the ability to administer(add/configure/delete/list) any bundle.'),
     ),
     'eck add bundles' => array(
       'title' => t('Add Bundles'),
@@ -601,7 +601,7 @@ function eck_permission() {
     'eck view' => 'View',
   );
 
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
 
     $perms["manage {$entity_type->name} properties"] = array(
       'title' => "Manage {$entity_type->label} Properties",
@@ -613,7 +613,7 @@ function eck_permission() {
       );
     }
 
-    foreach (Bundle::loadByEntityType($entity_type) as $bundle) {
+    foreach (EckBundle::loadByEckEntityType($entity_type) as $bundle) {
       $entity_perm_info = $perms_info + array('eck view' => "View");
 
       foreach ($entity_perm_info as $op => $op_label) {
@@ -719,7 +719,7 @@ function entity_table_select($form, &$state, $entity_type, $bundle, $header, $ro
  * Implements hook_entity_presave().
  */
 function eck_entity_presave($entity, $entity_type) {
-  $entity_type = EntityType::loadByName($entity_type);
+  $entity_type = EckEntityType::loadByName($entity_type);
 
   // This is an eck entity.
   if ($entity_type) {
@@ -733,7 +733,7 @@ function eck_entity_presave($entity, $entity_type) {
  * Implements hook_entity_insert().
  */
 function eck_entity_insert($entity, $entity_type) {
-  $entity_type = EntityType::loadByName($entity_type);
+  $entity_type = EckEntityType::loadByName($entity_type);
 
   // This is an eck entity.
   if ($entity_type) {
@@ -747,7 +747,7 @@ function eck_entity_insert($entity, $entity_type) {
  * Implements hook_entity_update().
  */
 function eck_entity_update($entity, $entity_type) {
-  $entity_type = EntityType::loadByName($entity_type);
+  $entity_type = EckEntityType::loadByName($entity_type);
 
   // This is an eck entity.
   if ($entity_type) {
@@ -761,7 +761,7 @@ function eck_entity_update($entity, $entity_type) {
  * Implements hook_entity_delete().
  */
 function eck_entity_delete($entity, $entity_type) {
-  $entity_type = EntityType::loadByName($entity_type);
+  $entity_type = EckEntityType::loadByName($entity_type);
 
   // This is an eck entity.
   if ($entity_type) {
@@ -903,7 +903,7 @@ function eck_entity_plus_view_alter(&$build, $entity_type) {
     return;
   }
 
-  $entity_types = EntityType::loadAll();
+  $entity_types = EckEntityType::loadAll();
 
   foreach ($entity_types as $et) {
     if ($et->name == $entity_type) {
@@ -937,8 +937,8 @@ function eck_init() {
   global $_eck_entity_types_cache;
   global $_eck_bundles_cache;
 
-  $_eck_entity_types_cache = new ECKCache("entity_types");
-  $_eck_bundles_cache = new ECKCache("bundles");
+  $_eck_entity_types_cache = new EckCache("entity_types");
+  $_eck_bundles_cache = new EckCache("bundles");
 
   eck_clean_up_init();
 }
@@ -991,7 +991,7 @@ function eck_clean_up() {
  */
 function eck_system_info_alter(&$info, $file, $type) {
   if ($type == "module" && array_key_exists("name", $info) && $info['name'] == "Entity Construction Kit") {
-    $entity_types = EntityType::loadAll();
+    $entity_types = EckEntityType::loadAll();
     if (!empty($entity_types)) {
       $info['required'] = TRUE;
       $info['explanation'] = "Entity types created by ECK are still present in the system.";
@@ -1004,7 +1004,7 @@ function eck_system_info_alter(&$info, $file, $type) {
  */
 function eck_bundle_copy_info() {
   $entity_info = array();
-  foreach (EntityType::loadAll() as $k => $entity_type) {
+  foreach (EckEntityType::loadAll() as $k => $entity_type) {
     $entity_info[$k] = array(
       'bundle_export_callback' => 'eck_bundle_copy_get_type',
       'bundle_save_callback' => 'eck_bundle_copy_save',

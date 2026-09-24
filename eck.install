@@ -19,102 +19,15 @@ function eck_schema() {
   // Schema for an eck only cache table.
   $schema['cache_eck'] = $cache_schema;
 
-  // Also support entitycache.
-  foreach (EntityType::loadAll() as $entity_type) {
+  foreach (EckEntityType::loadAll() as $entity_type) {
+    // Also support Entity Cache.
     $schema["cache_entity_{$entity_type->name}"] = $cache_schema;
     $schema["cache_entity_{$entity_type->name}"]['description'] = "Cache table used to store {$entity_type->name} entity records.";
+
+    // The function eck__entity_type__schema returns a schema for the entity type
+    // given and entity_type object.
+    $schema = array_merge($schema, array("eck_{$entity_type->name}" => eck__entity_type__schema($entity_type)));
   }
-
-  // Schema for the eck table.
-  $schema['eck_entity_type'] = array(
-    'description' => "The base table for entity type information",
-    'fields' => array(
-      'id' => array(
-        'description' => "The primary identifier for a bundle",
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'name' => array(
-        'description' => "The machine name of the entity",
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-      ),
-      'label' => array(
-        'description' => "The entity's Label",
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-      ),
-      'properties' => array(
-        'type' => 'text',
-        'not null' => TRUE,
-        'serialize' => TRUE,
-        'initial' => serialize(array()),
-        'description' => 'A serialized list of properties attached to this entity.',
-      ),
-    ),
-    'primary key' => array('id'),
-    'unique keys' => array(
-      'name' => array('name'),
-    ),
-    'indexes' => array(),
-  );
-
-  $schema['eck_bundle'] = array(
-    'description' => "The base table for bundle information",
-    'fields' => array(
-      'id' => array(
-        'description' => "The primary identifier for a bundle",
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'machine_name' => array(
-        'description' => "A combination of the entity type and the name of"
-        . "this bundle, this combination is unique",
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-      ),
-      'entity_type' => array(
-        'description' => "The entity type this bundle belongs to",
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-      ),
-      'name' => array(
-        'description' => "The bundle's name",
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-      ),
-      'label' => array(
-        'description' => "A human readable name for the bundle (not that the type is not human readable)",
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-      ),
-      'config' => array(
-        'description' => 'A serialized list of the bundle settings.',
-        'type' => 'text',
-        'serialize' => TRUE,
-        'initial' => serialize(array()),
-        'not null' => TRUE,
-      ),
-    ),
-    'primary key' => array('id'),
-    'unique' => array(
-      'machine_name' => array('machine_name'),
-    ),
-  );
-
-  // At the installation stage, ECK has not been created, so what is this for?
-  // The schema is not only used during installation, it is used at many other
-  // stages and by many other processes withing drupal. Because we are creating
-  // tables dynamically with eck, we need to expose those schemas through this
-  // function, that is why we are doing this.
   return $schema;
 }
 
@@ -146,14 +59,14 @@ function eck_update_1000() {
         ));
       }
     }
-  }
-  // Ensure that entitycache tables for ECK entities exist.
-  $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
-  foreach (EntityType::loadAll() as $entity_type) {
-    if (!db_table_exists("cache_entity_{$entity_type->name}")) {
-      $schema = $cache_schema;
-      $schema['description'] = "Cache table used to store {$entity_type->name} entity records.";
-      db_create_table("cache_entity_{$entity_type->name}", $schema);
+    // Ensure that entitycache tables for ECK entities exist.
+    $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
+    foreach ($entity_types as $entity_type) {
+      if (!db_table_exists("cache_entity_{$entity_type->name}")) {
+        $schema = $cache_schema;
+        $schema['description'] = "Cache table used to store {$entity_type->name} entity records.";
+        db_create_table("cache_entity_{$entity_type->name}", $schema);
+      }
     }
   }
   // Submodule entry is no longer needed since we've added the functionality
@@ -162,4 +75,43 @@ function eck_update_1000() {
     ->condition('name', 'eck_entitycache')
     ->condition('type', 'module')
     ->execute();
+}
+
+/**
+ * Updates ECK entity types and bundles to CMI.
+ */
+function eck_update_1001() {
+  $query = db_select('eck_entity_type', 'e')
+        ->fields('e')
+        ->orderBy('e.name', 'ASC');
+  $entity_types = array();
+  foreach ($query->execute() as $entity_object) {
+    $entity_types[$entity_object->name] = $entity_object;
+  }
+  foreach ($entity_types as $entity_object) {
+    $config = config('eck.entity_type.' . $entity_object->name);
+    $config->set('name', $entity_object->name);
+    $config->set('label', $entity_object->label);
+    $config->set('properties', unserialize($entity_object->properties));
+    $config->save();
+  }
+  db_drop_table('eck_entity_type');
+
+  $query = db_select('eck_bundle', 'b')
+        ->fields('b')
+        ->orderBy('b.name', 'ASC');
+  $bundles = array();
+  foreach ($query->execute() as $entity_object) {
+    $bundles[$entity_object->name] = $entity_object;
+  }
+  foreach ($bundles as $bundle_object) {
+    $config = config('eck.bundle.' . $bundle_object->entity_type . '.' . $bundle_object->name);
+    $config->set('name', $bundle_object->name);
+    $config->set('label', $bundle_object->label);
+    $config->set('entity_type', $bundle_object->entity_type);
+    $config->set('settings', unserialize($bundle_object->settings));
+    $config->save();
+  }
+  db_drop_table('eck_bundle');
+
 }

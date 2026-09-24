@@ -52,7 +52,7 @@ function eck_drush_command() {
  */
 function drush_eck_entity_construction_kit() {
 
-  $entity_objs = EntityType::loadAll();
+  $entity_objs = EckEntityType::loadAll();
 
   if (empty($entity_objs)) {
     return drush_log('Entity Constuction Kit does not have any entities.', 'warning');
@@ -78,7 +78,7 @@ function drush_eck_entity_construction_kit() {
     )), 'ok');
   }
 
-  $bundle_objs = Bundle::loadByEntityType($entity_type);
+  $bundle_objs = EckBundle::loadByEckEntityType($entity_type);
   if (count($bundle_objs) > 1) {
     $options = array();
 
@@ -123,7 +123,7 @@ function drush_eck_entity_construction_kit() {
  */
 function drush_eck_entity_construction_kit_all() {
 
-  $entity_types = EntityType::loadAll();
+  $entity_types = EckEntityType::loadAll();
   if (empty($entity_types)) {
     return drush_log('Entity Constuction Kit does not have any entities.', 'warning');
   }
@@ -143,7 +143,7 @@ function drush_eck_entity_construction_kit_all() {
     $rows[] = array('');
     $rows[] = array('');
 
-    foreach (Bundle::loadByEntityType($entity_type) as $bundle) {
+    foreach (EckBundle::loadByEckEntityType($entity_type) as $bundle) {
       $rows = array_merge($rows, _eck_get_bundle($entity_type, $bundle));
     }
   }

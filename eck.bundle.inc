@@ -9,7 +9,7 @@ module_load_include('inc', 'eck', 'eck.classes');
 /**
  * This function creates the menu items relevant to bundle administration.
  *
- * @param /EntityType $entity_type
+ * @param /EckEntityType $entity_type
  *   As returned by eck__entity_type__load().
  *
  * @return array
@@ -26,13 +26,13 @@ function eck__bundle__menu($entity_type) {
   // not being a default.
   // @todo: Remove these dummy items once issue https://drupal.org/node/2273189
   // is resolved.
-  $menu["$entity_type->name/%"] = array(
+  $menu["{$entity_type->name}/%"] = array(
     'page callback' => FALSE,
     'page arguments' => array(),
     'access callback' => FALSE,
     'access arguments' => array(),
   );
-  $menu["$entity_type->name/%/configure"] = array(
+  $menu["{$entity_type->name}/%/configure"] = array(
     'page callback' => FALSE,
     'page arguments' => array(),
     'access callback' => FALSE,
@@ -125,7 +125,7 @@ function eck__bundle__menu($entity_type) {
   // ADD Bundles.
   $menu["{$path}/{$entity_type->name}/add"] = array(
     'title' => "Add bundle ",
-    'description' => "Add a(n) new '{$entity_type->label} Bundle'",
+    'description' => "Add a new '{$entity_type->label} bundle'",
     'page callback' => "backdrop_get_form",
     'page arguments' => array('eck__bundle__add', 3),
     'access callback' => 'eck__multiple_access_check',
@@ -143,7 +143,7 @@ function eck__bundle__menu($entity_type) {
   );
 
   module_load_include('inc', 'eck', 'eck.entity');
-  foreach (Bundle::loadByEntityType($entity_type) as $bundle) {
+  foreach (EckBundle::loadByEckEntityType($entity_type) as $bundle) {
     $menu = array_merge($menu, eck__entity__menu($entity_type, $bundle));
   }
 
@@ -182,7 +182,7 @@ function eck__bundle__list($entity_type) {
 
     $rows = array();
 
-    $bundles = Bundle::loadByEntityType($entity_type);
+    $bundles = EckBundle::loadByEckEntityType($entity_type);
     usort($bundles, 'eck_alphabetical_cmp');
 
     foreach ($bundles as $bundle) {
@@ -258,7 +258,7 @@ function eck__bundle__list($entity_type) {
 }
 
 /**
- * Bundle add from callback.
+ * Bundle add form callback.
  */
 function eck__bundle__add($form, &$form_state, $entity_type) {
   $entity_type = entity_type_load($entity_type);
@@ -303,7 +303,7 @@ function eck__bundle__add_validate($form, &$form_state) {
 
   // The type does not have to be unique in the table, but it should be unique
   // to its entity so we will check that here.
-  foreach (Bundle::loadByEntityType($entity_type) as $bundle) {
+  foreach (EckBundle::loadByEckEntityType($entity_type) as $bundle) {
     if ($bundle->name == $form_state['values']['bundle_name']) {
       form_set_error('bundle', t("bundle @bundle_name already exists for this entity type",
         array("@bundle_name" => $bundle->name)));
@@ -312,7 +312,7 @@ function eck__bundle__add_validate($form, &$form_state) {
 }
 
 /**
- * Add bundle form callback.
+ * Bundle add form submit callback.
  */
 function eck__bundle__add_submit($form, &$form_state) {
   $path = eck__entity_type__path();
@@ -321,7 +321,7 @@ function eck__bundle__add_submit($form, &$form_state) {
   $bundle_name = $form_state['values']['bundle_name'];
   $bundle_label = $form_state['values']['bundle_label'];
 
-  $bundle = new Bundle();
+  $bundle = new EckBundle();
   $bundle->name = $bundle_name;
   $bundle->label = $bundle_label;
   $bundle->entity_type = $entity_type->name;
@@ -359,12 +359,12 @@ function eck__bundle__edit_form($form, &$form_state, $entity_type_name, $bundle_
 
   $form['entity_type'] = array(
     '#type' => 'value',
-    '#value' => $entity_type,
+    '#value' => $entity_type_name,
   );
 
   $form['bundle'] = array(
     '#type' => 'value',
-    '#value' => $bundle,
+    '#value' => $bundle_name,
   );
 
   $form['label'] = array(
@@ -380,7 +380,7 @@ function eck__bundle__edit_form($form, &$form_state, $entity_type_name, $bundle_
     $properties[$property] = $property . ' (' . $info['label'] . ')';
   }
   // Determine which managed fields should be checked by default.
-  $default_properties = (!empty($bundle->config['managed_properties']) && is_array($bundle->config['managed_properties'])) ? array_intersect_key($bundle->config['managed_properties'], $properties) : array();
+  $default_properties = (!empty($bundle->settings['managed_properties']) && is_array($bundle->settings['managed_properties'])) ? array_intersect_key($bundle->settings['managed_properties'], $properties) : array();
 
   // Add configuration to manage property display through the manage field
   // forms.
@@ -389,7 +389,7 @@ function eck__bundle__edit_form($form, &$form_state, $entity_type_name, $bundle_
     '#options' => $properties,
     '#default_value' => $default_properties,
     '#title' => t('Managed Properties'),
-    '#description' => t('Select the properties you would like to be able to manage like fields through the "Manage Fields" and "Display Fields" tabs on this Bundle.'),
+    '#description' => t('Select the properties you would like to be able to manage like fields through the "Manage Fields" and "Display Fields" tabs on this bundle.'),
   );
 
   // Let the behaviors to modify form.
@@ -411,12 +411,12 @@ function eck__bundle__edit_form($form, &$form_state, $entity_type_name, $bundle_
 }
 
 /**
- * Budle edit form submit callback.
+ * Bundle edit form submit callback.
  */
 function eck__bundle__edit_form_submit($form, &$form_state) {
   $entity_type = $form_state['values']['entity_type'];
   $bundle = $form_state['values']['bundle'];
-  // Save all form values starting from 'config_' to the $bundle->config array.
+  // Save all form values starting from 'config_' to the $bundle->settings array.
   $bundle_config = array();
   foreach ($form_state['values'] as $name => $value) {
     if (strpos($name, 'config_') === 0) {
@@ -424,7 +424,7 @@ function eck__bundle__edit_form_submit($form, &$form_state) {
       $bundle_config[substr($name, 7)] = $form_state['values'][$name];
     }
   }
-  $bundle->config = $bundle_config;
+  $bundle->settings = $bundle_config;
 
   $bundle->label = $form_state['values']['label'];
 
@@ -436,11 +436,11 @@ function eck__bundle__edit_form_submit($form, &$form_state) {
 }
 
 /**
- * Delete the bundle of a given entity type.
+ * Delete a bundle of a given entity type.
  *
- * @param \EntityType $entity_type
+ * @param \EckEntityType $entity_type
  *   The entity type of the bundle that will be deleted.
- * @param \Bundle $bundle
+ * @param \EckBundle $bundle
  *   The bundle to be deleted.
  *
  * @see eck.classes.inc

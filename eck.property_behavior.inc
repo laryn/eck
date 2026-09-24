@@ -72,7 +72,7 @@ function eck_property_behavior_invoke_plugin($entity_type, $function_name, $all 
 /**
  * A general function for behaviors that are meant to alter data.
  *
- * @param EntityType $entity_type
+ * @param EckEntityType $entity_type
  *   The entity type object.
  * @param string $function_name
  *   The name of the sub_hook.
@@ -111,7 +111,7 @@ function eck_property_behavior_invoke_plugin_alter($entity_type, $function_name,
 function eck_property_behavior_setter(&$data, $name, $value, $langcode, $type, $info) {
   $entity = $data;
   $entity_type_name = $entity->entityType();
-  $entity_type = EntityType::loadByName($entity_type_name);
+  $entity_type = EckEntityType::loadByName($entity_type_name);
   $property = $name;
 
   $function = eck_property_behavior_implements($entity_type, $property, 'setter');
@@ -127,7 +127,7 @@ function eck_property_behavior_setter(&$data, $name, $value, $langcode, $type, $
 function eck_property_behavior_getter($data, array $options, $name, $type, $info) {
   $entity = $data;
   $entity_type_name = $entity->entityType();
-  $entity_type = EntityType::loadByName($entity_type_name);
+  $entity_type = EckEntityType::loadByName($entity_type_name);
   $property = $name;
 
   $function = eck_property_behavior_implements($entity_type, $property, 'getter');
@@ -143,7 +143,7 @@ function eck_property_behavior_getter($data, array $options, $name, $type, $info
 function eck_property_behavior_validation($value, $info) {
   $entity = $info['parent']->value();
   $entity_type_name = $entity->entityType();
-  $entity_type = EntityType::loadByName($entity_type_name);
+  $entity_type = EckEntityType::loadByName($entity_type_name);
   $property = $info['schema field'];
 
   $function = eck_property_behavior_implements($entity_type, $property, 'validation');

@@ -30,8 +30,8 @@ function eck__entity__menu($entity_type, $bundle) {
   );
 
   // EDIT Bundles.
-  $menu["{$path}/{$entity_type->name}/{$bundle->name}/edit"] = array(
-    'title' => 'Edit',
+  $menu["{$path}/{$entity_type->name}/{$bundle->name}/configure"] = array(
+    'title' => 'Configure',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array(
       'eck__bundle__edit_form',
@@ -259,9 +259,9 @@ function eck__entity__add($entity_type_name, $bundle_name) {
 /**
  * Get the entities view.
  *
- * @param EntityType $entity_type
- *   entity type.
- * @param Bundle $bundle
+ * @param EckEntityType $entity_type
+ *   Entity type.
+ * @param EckBundle $bundle
  *   Bundle.
  * @param mixed $id
  *   The entity id or the entity object itself
@@ -405,7 +405,7 @@ function eck__entity__form($form, &$form_state, $entity) {
     // If there was no widget given through the property_info array, we look for
     // a widget in the property behaviors implemented.
     $entity_type = $entity->entityType();
-    $entity_type = EntityType::loadByName($entity_type);
+    $entity_type = EckEntityType::loadByName($entity_type);
 
     $vars = array('entity' => $entity);
     $vars += $property_info;
@@ -453,7 +453,7 @@ function eck__entity__form_submit($form, &$state) {
   $entity = $state['values']['entity'];
 
   $entity_type = $entity->entityType();
-  $entity_type = EntityType::loadByName($entity_type);
+  $entity_type = EckEntityType::loadByName($entity_type);
   $properties = $entity_type->properties;
 
   // Collect all form values for properties to be passed to pre_set behavior.

@@ -8,7 +8,7 @@
 /**
  * Base class for ECK entities.
  */
-class ECKEntity extends Entity {
+class EckEntity extends Entity {
 
   /**
    * ID
