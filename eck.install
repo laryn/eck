@@ -11,7 +11,6 @@
  * All that we need for each entity is a name and a label.
  */
 function eck_schema() {
-
   $schema = array();
 
   $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
@@ -92,7 +91,7 @@ function eck_update_1001() {
     $config = config('eck.entity_type.' . $entity_object->name);
     $config->set('name', $entity_object->name);
     $config->set('label', $entity_object->label);
-    $config->set('properties', unserialize($entity_object->properties));
+    $config->set('properties', json_decode($entity_object->properties ?? '{}', TRUE) ?? []);
     $config->save();
   }
   db_drop_table('eck_entity_type');
@@ -109,9 +108,18 @@ function eck_update_1001() {
     $config->set('name', $bundle_object->name);
     $config->set('label', $bundle_object->label);
     $config->set('entity_type', $bundle_object->entity_type);
-    $config->set('settings', unserialize($bundle_object->settings));
+    $config->set('settings', json_decode($bundle_object->settings ?? '{}', TRUE) ?? []);
     $config->save();
   }
   db_drop_table('eck_bundle');
 
+  // Clear the ECK caches.
+  global $_eck_entity_types_cache;
+  global $_eck_bundles_cache;
+
+  $_eck_entity_types_cache = new EckCache("entity_types");
+  $_eck_entity_types_cache->reset();
+  $_eck_bundles_cache = new EckCache("bundles");
+  $_eck_bundles_cache->reset();
+  eck_clean_up_request();
 }
