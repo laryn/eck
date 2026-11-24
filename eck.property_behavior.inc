@@ -88,8 +88,10 @@ function eck_property_behavior_invoke_plugin_alter($entity_type, $function_name,
 
   foreach ($properties as $property => $info) {
     // If there is a behavior associated with this property we need to call
-    // the appropiate hooks.
-    if (array_key_exists('behavior', $info) && !empty($info['behavior'])) {
+    // the appropiate hooks. We check for the plugin_manager module's existence
+    // only because during a D7->Backdrop upgrade this may fire before the
+    // plugin_manager module is fully available.
+    if (array_key_exists('behavior', $info) && !empty($info['behavior']) && module_exists('plugin_manager')) {
       $behavior = $info['behavior'];
 
       $plugin = plugin_manager_get_plugins('eck', 'property_behavior', $behavior);
